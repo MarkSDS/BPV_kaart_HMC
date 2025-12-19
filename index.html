@@ -5,43 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Bedrijvenkaart</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <style>
-        /* Zorg dat de kaart het hele scherm vult */
-        body { padding: 0; margin: 0; }
+        body { padding: 0; margin: 0; font-family: sans-serif; }
         html, body, #map { height: 100%; width: 100vw; }
+        
+        /* Popup styling */
+        .popup-content h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; }
+        .popup-content p { margin: 0; font-size: 13px; color: #666; }
+        .popup-content a { color: #0078A8; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <script>
-        // --- HIER KOMT ONZE EIGEN CODE ---
-        
-        // 1. Initialiseer de kaart en zet het startpunt (bijv. midden van NL) en zoomniveau
-        //    We gebruiken hier even hardcoded coördinaten voor Utrecht als startpunt.
-        var map = L.map('map').setView([52.0907, 5.1214], 8);
+        // JOUW LIVE DATA URL
+        const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=456498008&single=true&output=csv";
 
-        // 2. Voeg de "tegels" (de daadwerkelijke kaartplaatjes) toe. 
-        //    We gebruiken hier OpenStreetMap tegels (gratis).
+        // Kaart startpunt (Utrecht)
+        var map = L.map('map').setView([52.1326, 5.2913], 8);
+
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
-        // Tijd om te testen! Laten we één handmatige marker toevoegen om te zien of het werkt.
-        var testMarker = L.marker([52.0907, 5.1214]).addTo(map);
-        testMarker.bindPopup("<b>Hallo!</b><br>Dit is een test marker in Utrecht.").openPopup();
+        function laadPunten() {
+            Papa.parse(googleSheetCSV, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    var data = results.data;
+                    console.log("Aantal regels:", data.length); 
+
+                    data.forEach(function(rij) {
+                        // LET OP: Hier gebruiken we de kolom met spatie 'LAT LONG'
+                        if(rij['LAT LONG'] && rij['LAT LONG'].includes(',')) {
+                            
+                            var parts = rij['LAT LONG'].split(',');
+                            var lat = parseFloat(parts[0]);
+                            var lng = parseFloat(parts[1]);
+
+                            // Status logica
+                            var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
+                            var kleur = '#3388ff'; // Blauw (standaard)
+                            var fillKleur = '#3388ff';
+
+                            if (status === 'v') {
+                                kleur = '#ff3333'; // Rood randje
+                                fillKleur = '#ffaaaa'; // Rood vulling
+                                // Wil je ze verbergen? Haal '//' hieronder weg:
+                                // return; 
+                            }
+
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                var marker = L.circleMarker([lat, lng], {
+                                    radius: 7,
+                                    fillColor: fillKleur,
+                                    color: kleur,
+                                    weight: 1,
+                                    opacity: 1,
+                                    fillOpacity: 0.7
+                                });
+
+                                var websiteLink = rij.Website ? `<br><a href="${rij.Website}" target="_blank">Website</a>` : '';
+
+                                var popupHTML = `
+                                    <div class="popup-content">
+                                        <h3>${rij.Naam}</h3>
+                                        <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
+                                        ${websiteLink}
+                                    </div>
+                                `;
+                                
+                                marker.bindPopup(popupHTML);
+                                marker.addTo(map);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Start de functie
+        laadPunten();
 
     </script>
 </body>
