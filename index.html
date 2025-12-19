@@ -17,7 +17,7 @@
         /* Popup styling */
         .popup-content { min-width: 200px; }
         .popup-header { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; }
+        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; }
         .popup-content p { margin: 0 0 10px 0; font-size: 13px; color: #666; }
         
         /* Knoppen styling */
@@ -27,7 +27,8 @@
             border-radius: 4px; font-size: 13px; font-weight: bold;
         }
         .btn-streetview { background-color: #FFC107; color: #333; }
-        .website-link { display: block; margin-top: 10px; color: #0078A8; font-size: 12px; }
+        .website-link { display: block; margin-top: 10px; color: #0078A8; font-size: 12px; text-decoration: none; }
+        .website-link:hover { text-decoration: underline; }
 
         /* Legenda (Linksonder) */
         .legend {
@@ -46,24 +47,27 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // JOUW DATA URL
-        const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=1928204680&single=true&output=csv";
+        // --- BELANGRIJK: DE LINK NAAR JE DATA ---
+        // Controleer of dit de link is naar je NIEUWE tabblad (met de data)
+        const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=456498008&single=true&output=csv";
 
         // --- KAARTLAGEN ---
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
         var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
 
+        // Kaart startpunt (Midden NL)
         var map = L.map('map', {
             center: [52.1326, 5.2913],
             zoom: 8,
             layers: [googleStreets] 
         });
 
+        // Laagwisselaar
         var baseMaps = { "Google Kaart": googleStreets, "Google Satelliet": googleSat, "OpenStreetMap": osmLayer };
         L.control.layers(baseMaps).addTo(map);
 
-        // --- LEGENDA TOEVOEGEN ---
+        // --- LEGENDA ---
         var legend = L.control({position: 'bottomleft'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend');
@@ -103,11 +107,11 @@
                             var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
                             var erkenning = rij.Erkenning ? rij.Erkenning : 'Onbekend';
                             
-                            // 2. Kleuren Logica (De "Nuance")
-                            var kleur = '#2196f3'; // Blauw (Standaard/Overig)
+                            // 2. Kleuren Logica
+                            var kleur = '#2196f3'; // Blauw (Overig)
                             var erkenningLabel = erkenning;
 
-                            // We checken wat er in de tekst staat
+                            // Check niveau in tekst
                             if (erkenning.includes('4')) {
                                 kleur = '#9c27b0'; // Paars
                             } else if (erkenning.includes('3')) {
@@ -122,7 +126,7 @@
                                 erkenningLabel = "NIET ACTIEF";
                             }
 
-if (!isNaN(lat) && !isNaN(lng)) {
+                            if (!isNaN(lat) && !isNaN(lng)) {
                                 var marker = L.circleMarker([lat, lng], {
                                     radius: 8,
                                     fillColor: kleur,
@@ -132,21 +136,25 @@ if (!isNaN(lat) && !isNaN(lng)) {
                                     fillOpacity: 0.9
                                 });
 
-                                // Links maken
-                                var mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-                                var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+                                // 3. Links maken
+                                var mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                                var streetViewLink = `http://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`;
                                 
-                                // SLIMME WEBSITE FIX
+                                // 4. SLIMME WEBSITE FIX
                                 var url = rij.Website;
+                                var websiteLink = '';
+                                
                                 if (url) {
-                                    // Check op http/https prefix
-                                    // .trim() haalt eventuele spaties voor of achter de link weg
-                                    url = url.trim(); 
-                                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                                    url = url.trim(); // Spaties weghalen
+                                    // Als hij NIET begint met http/https, plak het ervoor
+                                    if (url.length > 0 && !url.toLowerCase().startsWith('http://') && !url.toLowerCase().startsWith('https://')) {
                                         url = 'http://' + url;
                                     }
+                                    
+                                    if(url.length > 0) {
+                                        websiteLink = `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>`;
+                                    }
                                 }
-                                var websiteLink = url ? `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>` : '';
 
                                 var popupHTML = `
                                     <div class="popup-content">
@@ -164,6 +172,12 @@ if (!isNaN(lat) && !isNaN(lng)) {
                                 marker.bindPopup(popupHTML);
                                 markers.addLayer(marker);
                             }
+                        }
+                    });
+
+                    // Alles op de kaart zetten
+                    map.addLayer(markers);
+                }
             });
         }
 
@@ -172,7 +186,3 @@ if (!isNaN(lat) && !isNaN(lng)) {
     </script>
 </body>
 </html>
-
-
-
-
