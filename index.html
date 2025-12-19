@@ -122,20 +122,31 @@
                                 erkenningLabel = "NIET ACTIEF";
                             }
 
-                            if (!isNaN(lat) && !isNaN(lng)) {
+if (!isNaN(lat) && !isNaN(lng)) {
                                 var marker = L.circleMarker([lat, lng], {
                                     radius: 8,
                                     fillColor: kleur,
-                                    color: "white", // Wit randje voor contrast
+                                    color: "white", 
                                     weight: 2,
                                     opacity: 1,
                                     fillOpacity: 0.9
                                 });
 
-                                // Links
+                                // Links maken
                                 var mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
                                 var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-                                var websiteLink = rij.Website ? `<a href="${rij.Website}" target="_blank" class="website-link">🌐 Website bezoeken</a>` : '';
+                                
+                                // SLIMME WEBSITE FIX
+                                var url = rij.Website;
+                                if (url) {
+                                    // Check op http/https prefix
+                                    // .trim() haalt eventuele spaties voor of achter de link weg
+                                    url = url.trim(); 
+                                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                                        url = 'http://' + url;
+                                    }
+                                }
+                                var websiteLink = url ? `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>` : '';
 
                                 var popupHTML = `
                                     <div class="popup-content">
@@ -153,11 +164,6 @@
                                 marker.bindPopup(popupHTML);
                                 markers.addLayer(marker);
                             }
-                        }
-                    });
-
-                    map.addLayer(markers);
-                }
             });
         }
 
@@ -166,6 +172,7 @@
     </script>
 </body>
 </html>
+
 
 
 
