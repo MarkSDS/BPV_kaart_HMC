@@ -17,7 +17,7 @@
         /* Popup styling */
         .popup-content { min-width: 200px; }
         .popup-header { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; }
+        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; margin-right: 3px;}
         .popup-content p { margin: 0 0 10px 0; font-size: 13px; color: #666; }
         
         /* Knoppen styling */
@@ -30,7 +30,7 @@
         .website-link { display: block; margin-top: 10px; color: #0078A8; font-size: 12px; text-decoration: none; }
         .website-link:hover { text-decoration: underline; }
 
-        /* Legenda (Linksonder) */
+        /* Legenda */
         .legend {
             background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
             font-size: 12px; line-height: 18px; color: #555;
@@ -47,44 +47,52 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // --- BELANGRIJK: DE LINK NAAR JE DATA ---
-        // Controleer of dit de link is naar je NIEUWE tabblad (met de data)
-        const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=1928204680&single=true&output=csv";
+        // --- JOUW SHEET LINK ---
+        const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=456498008&single=true&output=csv";
 
-        // --- KAARTLAGEN ---
+        // --- KAARTLAGEN (ACHTERGROND) ---
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
         var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
 
-        // Kaart startpunt (Midden NL)
         var map = L.map('map', {
             center: [52.1326, 5.2913],
             zoom: 8,
-            layers: [googleStreets] 
+            layers: [googleStreets] // Startlaag
         });
 
-        // Laagwisselaar
+        // --- FILTER LAGEN (VOOR DE NIVEAUS) ---
+        // We maken 3 aparte "mandjes" (clusters) voor de 3 niveaus
+        var clusterN2 = L.markerClusterGroup({ maxClusterRadius: 50 });
+        var clusterN3 = L.markerClusterGroup({ maxClusterRadius: 50 });
+        var clusterN4 = L.markerClusterGroup({ maxClusterRadius: 50 });
+
+        // Voeg ze standaard alle drie toe aan de kaart
+        map.addLayer(clusterN2);
+        map.addLayer(clusterN3);
+        map.addLayer(clusterN4);
+
+        // Menu rechtsboven
         var baseMaps = { "Google Kaart": googleStreets, "Google Satelliet": googleSat, "OpenStreetMap": osmLayer };
-        L.control.layers(baseMaps).addTo(map);
+        var overlayMaps = { 
+            "<span style='color:#4caf50'>■</span> Niveau 2": clusterN2, 
+            "<span style='color:#ff9800'>■</span> Niveau 3": clusterN3, 
+            "<span style='color:#9c27b0'>■</span> Niveau 4": clusterN4 
+        };
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
 
         // --- LEGENDA ---
         var legend = L.control({position: 'bottomleft'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend');
             div.innerHTML += "<strong>Opleidingsniveau</strong><br>";
-            div.innerHTML += '<i style="background: #9c27b0"></i> Niveau 4<br>'; // Paars
-            div.innerHTML += '<i style="background: #ff9800"></i> Niveau 3<br>'; // Oranje
-            div.innerHTML += '<i style="background: #4caf50"></i> Niveau 2<br>'; // Groen
-            div.innerHTML += '<i style="background: #f44336"></i> Zit al iemand. Check plaatsingsbegeleider<br>'; // Rood
+            div.innerHTML += '<i style="background: #9c27b0"></i> Niveau 4<br>';
+            div.innerHTML += '<i style="background: #ff9800"></i> Niveau 3<br>';
+            div.innerHTML += '<i style="background: #4caf50"></i> Niveau 2<br>';
+            div.innerHTML += '<i style="background: #f44336"></i> Al bezet / Vraag begeleider<br>';
             return div;
         };
         legend.addTo(map);
-
-        // --- CLUSTERS ---
-        var markers = L.markerClusterGroup({
-            showCoverageOnHover: false,
-            maxClusterRadius: 50
-        });
 
         function laadPunten() {
             Papa.parse(googleSheetCSV, {
@@ -102,80 +110,72 @@
                             var lat = parseFloat(parts[0]);
                             var lng = parseFloat(parts[1]);
 
-                            // 1. Data Ophalen
-                            var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
-                            var erkenning = rij.Erkenning ? rij.Erkenning : 'Onbekend';
-                            
-                            // 2. Kleuren Logica
-                            var kleur = '#2196f3'; // Blauw (Overig)
-                            var erkenningLabel = erkenning;
-
-                            // Check niveau in tekst
-                            if (erkenning.includes('4')) {
-                                kleur = '#9c27b0'; // Paars
-                            } else if (erkenning.includes('3')) {
-                                kleur = '#ff9800'; // Oranje
-                            } else if (erkenning.includes('2') || erkenning.includes('1')) {
-                                kleur = '#4caf50'; // Groen
-                            }
-
-                            // Status V wint altijd
-                            if (status === 'v') {
-                                kleur = '#f44336'; // Rood
-                                erkenningLabel = "Al bezet; vraag plaatsingsbegeleider";
-                            }
-
                             if (!isNaN(lat) && !isNaN(lng)) {
-                                var marker = L.circleMarker([lat, lng], {
-                                    radius: 8,
-                                    fillColor: kleur,
-                                    color: "white", 
-                                    weight: 2,
-                                    opacity: 1,
-                                    fillOpacity: 0.9
-                                });
 
-                                // 3. Links maken
-                                var mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
-                                var streetViewLink = `http://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`;
+                                // DATA UITLEZEN
+                                var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
                                 
-                                // 4. SLIMME WEBSITE FIX
+                                // Check de kruisjes in de kolommen (pas de namen aan als je kolommen anders heten!)
+                                // We checken of er IETS in de cel staat (bijv 'x', 'ja', '1')
+                                var heeftN2 = rij['Niveau 2'] && rij['Niveau 2'].length > 0;
+                                var heeftN3 = rij['Niveau 3'] && rij['Niveau 3'].length > 0;
+                                var heeftN4 = rij['Niveau 4'] && rij['Niveau 4'].length > 0;
+
+                                // Linkjes maken
+                                var mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                                var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
                                 var url = rij.Website;
                                 var websiteLink = '';
-                                
                                 if (url) {
-                                    url = url.trim(); // Spaties weghalen
-                                    // Als hij NIET begint met http/https, plak het ervoor
-                                    if (url.length > 0 && !url.toLowerCase().startsWith('http://') && !url.toLowerCase().startsWith('https://')) {
-                                        url = 'http://' + url;
-                                    }
-                                    
-                                    if(url.length > 0) {
-                                        websiteLink = `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>`;
-                                    }
+                                    url = url.trim();
+                                    if (url.length > 0 && !url.toLowerCase().startsWith('http')) url = 'http://' + url;
+                                    websiteLink = `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>`;
                                 }
 
-                                var popupHTML = `
-                                    <div class="popup-content">
-                                        <div class="popup-header">${rij.Naam}</div>
-                                        <span class="popup-level" style="background:${kleur}">${erkenningLabel}</span>
-                                        <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
-                                        
-                                        <a href="${mapsLink}" target="_blank" class="btn-action">🚗 Route</a>
-                                        <a href="${streetViewLink}" target="_blank" class="btn-action btn-streetview">👀 Kijk</a>
-                                        
-                                        ${websiteLink}
-                                    </div>
-                                `;
+                                // HULPFUNCTIE: MAAK MARKER
+                                function maakMarker(kleur, niveauLabel, layerGroup) {
+                                    var finalColor = kleur;
+                                    var label = niveauLabel;
+                                    
+                                    // Als status V is, wordt hij rood en krijgt hij de waarschuwingstekst
+                                    if (status === 'v') {
+                                        finalColor = '#f44336';
+                                        label = "Al bezet, vraag plaatsingsbegeleider";
+                                    }
+
+                                    var marker = L.circleMarker([lat, lng], {
+                                        radius: 8,
+                                        fillColor: finalColor,
+                                        color: "white", weight: 2, opacity: 1, fillOpacity: 0.9
+                                    });
+
+                                    var popupHTML = `
+                                        <div class="popup-content">
+                                            <div class="popup-header">${rij.Naam}</div>
+                                            <span class="popup-level" style="background:${finalColor}">${label}</span>
+                                            <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
+                                            <a href="${mapsLink}" target="_blank" class="btn-action">🚗 Route</a>
+                                            <a href="${streetViewLink}" target="_blank" class="btn-action btn-streetview">👀 Kijk</a>
+                                            ${websiteLink}
+                                        </div>
+                                    `;
+                                    
+                                    marker.bindPopup(popupHTML);
+                                    layerGroup.addLayer(marker);
+                                }
+
+                                // NU DE MARKERS MAKEN PER LAAG
+                                // Als het bedrijf N2 heeft -> maak groene marker in N2 laag
+                                if (heeftN2) maakMarker('#4caf50', 'Niveau 2', clusterN2);
                                 
-                                marker.bindPopup(popupHTML);
-                                markers.addLayer(marker);
+                                // Als het bedrijf N3 heeft -> maak oranje marker in N3 laag
+                                if (heeftN3) maakMarker('#ff9800', 'Niveau 3', clusterN3);
+                                
+                                // Als het bedrijf N4 heeft -> maak paarse marker in N4 laag
+                                if (heeftN4) maakMarker('#9c27b0', 'Niveau 4', clusterN4);
                             }
                         }
                     });
-
-                    // Alles op de kaart zetten
-                    map.addLayer(markers);
                 }
             });
         }
@@ -185,7 +185,3 @@
     </script>
 </body>
 </html>
-
-
-
-
