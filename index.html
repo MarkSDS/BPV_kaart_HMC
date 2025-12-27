@@ -15,20 +15,30 @@
         html, body, #map { height: 100%; width: 100vw; }
         
         /* Popup styling */
-        .popup-content { min-width: 200px; }
+        .popup-content { min-width: 220px; }
         .popup-header { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #333; }
         .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; margin-right: 3px;}
         .popup-content p { margin: 0 0 10px 0; font-size: 13px; color: #666; }
         
         /* Knoppen styling */
         .btn-action {
-            display: inline-block; margin-top: 5px; margin-right: 5px; padding: 8px 12px;
+            display: inline-block; margin-top: 5px; margin-right: 5px; padding: 6px 10px;
             background-color: #4285F4; color: white; text-decoration: none;
-            border-radius: 4px; font-size: 13px; font-weight: bold;
+            border-radius: 4px; font-size: 12px; font-weight: bold;
         }
         .btn-streetview { background-color: #FFC107; color: #333; }
         .website-link { display: block; margin-top: 10px; color: #0078A8; font-size: 12px; text-decoration: none; }
         .website-link:hover { text-decoration: underline; }
+
+        /* Route input styling */
+        .route-box { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; }
+        .route-input { 
+            width: 130px; padding: 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;
+        }
+        .btn-go {
+            background-color: #4caf50; color: white; border: none; padding: 5px 10px;
+            border-radius: 3px; cursor: pointer; font-weight: bold; font-size: 12px;
+        }
 
         /* Legenda */
         .legend {
@@ -47,10 +57,10 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // --- JOUW SHEET LINK ---
+        // --- JOUW SHEET LINK (Met de nieuwe GID) ---
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=1928204680&single=true&output=csv";
 
-        // --- KAARTLAGEN (ACHTERGROND) ---
+        // --- KAARTLAGEN ---
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
         var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
@@ -58,21 +68,18 @@
         var map = L.map('map', {
             center: [52.1326, 5.2913],
             zoom: 8,
-            layers: [googleStreets] // Startlaag
+            layers: [googleStreets] 
         });
 
-        // --- FILTER LAGEN (VOOR DE NIVEAUS) ---
-        // We maken 3 aparte "mandjes" (clusters) voor de 3 niveaus
+        // --- FILTER LAGEN ---
         var clusterN2 = L.markerClusterGroup({ maxClusterRadius: 50 });
         var clusterN3 = L.markerClusterGroup({ maxClusterRadius: 50 });
         var clusterN4 = L.markerClusterGroup({ maxClusterRadius: 50 });
 
-        // Voeg ze standaard alle drie toe aan de kaart
         map.addLayer(clusterN2);
         map.addLayer(clusterN3);
         map.addLayer(clusterN4);
 
-        // Menu rechtsboven
         var baseMaps = { "Google Kaart": googleStreets, "Google Satelliet": googleSat, "OpenStreetMap": osmLayer };
         var overlayMaps = { 
             "<span style='color:#4caf50'>■</span> Niveau 2": clusterN2, 
@@ -94,6 +101,27 @@
         };
         legend.addTo(map);
 
+        // --- NIEUW: ROUTE FUNCTIE ---
+        // Deze functie wordt aangeroepen als je op de groene 'Go' knop drukt
+        window.startRoute = function(lat, lng, inputId) {
+            var inputVeld = document.getElementById(inputId);
+            var vertrekPunt = inputVeld.value; // Wat heeft de gebruiker getypt?
+            
+            var url = "";
+            
+            if (vertrekPunt && vertrekPunt.trim() !== "") {
+                // Als er iets is ingevuld: Route van [Invoer] naar [Bestemming]
+                // encodeURIComponent zorgt dat spaties etc. goed worden omgezet voor de URL
+                url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(vertrekPunt)}&destination=${lat},${lng}`;
+            } else {
+                // Niets ingevuld? Dan gewoon 'navigeer hierheen' (gebruikt GPS)
+                url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+            }
+            
+            // Open in nieuw tabblad (of app)
+            window.open(url, '_blank');
+        };
+
         function laadPunten() {
             Papa.parse(googleSheetCSV, {
                 download: true,
@@ -110,19 +138,18 @@
                             var lat = parseFloat(parts[0]);
                             var lng = parseFloat(parts[1]);
 
+                            // We hebben een uniek ID nodig voor het invulveldje
+                            // Gebruik kolom 'Id' als die bestaat, anders een random getal
+                            var uniekId = rij.Id ? rij.Id : Math.floor(Math.random() * 1000000);
+
                             if (!isNaN(lat) && !isNaN(lng)) {
 
-                                // DATA UITLEZEN
                                 var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
                                 
-                                // Check de kruisjes in de kolommen (pas de namen aan als je kolommen anders heten!)
-                                // We checken of er IETS in de cel staat (bijv 'x', 'ja', '1')
                                 var heeftN2 = rij['Niveau 2'] && rij['Niveau 2'].length > 0;
                                 var heeftN3 = rij['Niveau 3'] && rij['Niveau 3'].length > 0;
                                 var heeftN4 = rij['Niveau 4'] && rij['Niveau 4'].length > 0;
 
-                                // Linkjes maken
-                                var mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
                                 var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
                                 var url = rij.Website;
                                 var websiteLink = '';
@@ -132,12 +159,10 @@
                                     websiteLink = `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>`;
                                 }
 
-                                // HULPFUNCTIE: MAAK MARKER
                                 function maakMarker(kleur, niveauLabel, layerGroup) {
                                     var finalColor = kleur;
                                     var label = niveauLabel;
                                     
-                                    // Als status V is, wordt hij rood en krijgt hij de waarschuwingstekst
                                     if (status === 'v') {
                                         finalColor = '#f44336';
                                         label = "Al bezet, vraag plaatsingsbegeleider";
@@ -149,14 +174,21 @@
                                         color: "white", weight: 2, opacity: 1, fillOpacity: 0.9
                                     });
 
+                                    // HIER IS DE POPUP MET INVULVELD
                                     var popupHTML = `
                                         <div class="popup-content">
                                             <div class="popup-header">${rij.Naam}</div>
                                             <span class="popup-level" style="background:${finalColor}">${label}</span>
                                             <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
-                                            <a href="${mapsLink}" target="_blank" class="btn-action">🚗 Route</a>
-                                            <a href="${streetViewLink}" target="_blank" class="btn-action btn-streetview">👀 Kijk</a>
+                                            
+                                            <a href="${streetViewLink}" target="_blank" class="btn-action btn-streetview">👀 Streetview</a>
                                             ${websiteLink}
+
+                                            <div class="route-box">
+                                                <small>Plan route vanaf:</small><br>
+                                                <input type="text" id="route-${uniekId}-${label}" class="route-input" placeholder="Postcode of plaats...">
+                                                <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label}')" class="btn-go">Go 🚗</button>
+                                            </div>
                                         </div>
                                     `;
                                     
@@ -164,14 +196,8 @@
                                     layerGroup.addLayer(marker);
                                 }
 
-                                // NU DE MARKERS MAKEN PER LAAG
-                                // Als het bedrijf N2 heeft -> maak groene marker in N2 laag
                                 if (heeftN2) maakMarker('#4caf50', 'Niveau 2', clusterN2);
-                                
-                                // Als het bedrijf N3 heeft -> maak oranje marker in N3 laag
                                 if (heeftN3) maakMarker('#ff9800', 'Niveau 3', clusterN3);
-                                
-                                // Als het bedrijf N4 heeft -> maak paarse marker in N4 laag
                                 if (heeftN4) maakMarker('#9c27b0', 'Niveau 4', clusterN4);
                             }
                         }
@@ -185,4 +211,3 @@
     </script>
 </body>
 </html>
-
