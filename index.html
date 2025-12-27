@@ -103,23 +103,31 @@
 
         // --- NIEUW: ROUTE FUNCTIE ---
         // Deze functie wordt aangeroepen als je op de groene 'Go' knop drukt
+// --- NIEUW: ROUTE FUNCTIE (DEFAULT: OV) ---
         window.startRoute = function(lat, lng, inputId) {
             var inputVeld = document.getElementById(inputId);
-            var vertrekPunt = inputVeld.value; // Wat heeft de gebruiker getypt?
+            var vertrekPunt = inputVeld.value; 
             
-            var url = "";
+            // De officiële Google Maps Directions URL
+            var baseUrl = "https://www.google.com/maps/dir/?api=1";
+            var destination = `&destination=${lat},${lng}`;
+            
+            // HIER ZETTEN WE HEM OP OV
+            // Opties: driving, walking, bicycling, transit
+            var mode = "&travelmode=transit"; 
+
+            var finalUrl = "";
             
             if (vertrekPunt && vertrekPunt.trim() !== "") {
-                // Als er iets is ingevuld: Route van [Invoer] naar [Bestemming]
-                // encodeURIComponent zorgt dat spaties etc. goed worden omgezet voor de URL
-                url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(vertrekPunt)}&destination=${lat},${lng}`;
+                // Met specifiek startpunt
+                var origin = `&origin=${encodeURIComponent(vertrekPunt)}`;
+                finalUrl = baseUrl + origin + destination + mode;
             } else {
-                // Niets ingevuld? Dan gewoon 'navigeer hierheen' (gebruikt GPS)
-                url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+                // Zonder startpunt (pakt automatisch GPS huidige locatie)
+                finalUrl = baseUrl + destination + mode;
             }
             
-            // Open in nieuw tabblad (of app)
-            window.open(url, '_blank');
+            window.open(finalUrl, '_blank');
         };
 
         function laadPunten() {
@@ -211,3 +219,4 @@
     </script>
 </body>
 </html>
+
