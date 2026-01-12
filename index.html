@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Bedrijvenkaart</title>
+    <title>BPV Kaart HMC</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
@@ -15,10 +15,11 @@
         html, body, #map { height: 100%; width: 100vw; }
         
         /* Popup styling */
-        .popup-content { min-width: 220px; }
-        .popup-header { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; margin-right: 3px;}
-        .popup-content p { margin: 0 0 10px 0; font-size: 13px; color: #666; }
+        .popup-content { min-width: 230px; }
+        .popup-header { font-size: 15px; font-weight: bold; margin-bottom: 2px; color: #333; }
+        .popup-cap { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; display: block; }
+        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; margin-right: 3px; text-shadow: 0px 0px 2px rgba(0,0,0,0.5); }
+        .popup-content p { margin: 0 0 10px 0; font-size: 13px; color: #666; line-height: 1.4; }
         
         /* Knoppen styling */
         .btn-action {
@@ -31,9 +32,9 @@
         .website-link:hover { text-decoration: underline; }
 
         /* Route input styling */
-        .route-box { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; }
+        .route-box { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; background: #f9f9f9; padding: 8px; border-radius: 4px; }
         .route-input { 
-            width: 130px; padding: 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;
+            width: 120px; padding: 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;
         }
         .btn-go {
             background-color: #4caf50; color: white; border: none; padding: 5px 10px;
@@ -43,9 +44,12 @@
         /* Legenda */
         .legend {
             background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            font-size: 12px; line-height: 18px; color: #555;
+            font-size: 11px; line-height: 16px; color: #555;
+            max-height: 300px; overflow-y: auto;
         }
-        .legend i { width: 10px; height: 10px; float: left; margin-right: 8px; opacity: 0.8; border-radius: 50%; margin-top: 4px; }
+        .legend h4 { margin: 0 0 5px 0; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+        .legend i { width: 10px; height: 10px; float: left; margin-right: 8px; opacity: 0.8; border-radius: 50%; margin-top: 3px; }
+        .legend-section { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -57,10 +61,10 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
     <script>
-        // --- JOUW SHEET LINK (Met de nieuwe GID) ---
+        // --- DATA LINK (GID 1928204680) ---
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=1928204680&single=true&output=csv";
 
-        // --- KAARTLAGEN ---
+        // --- KAART SETUP ---
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
         var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
@@ -71,65 +75,84 @@
             layers: [googleStreets] 
         });
 
-        // --- FILTER LAGEN ---
-        var clusterN2 = L.markerClusterGroup({ maxClusterRadius: 50 });
-        var clusterN3 = L.markerClusterGroup({ maxClusterRadius: 50 });
-        var clusterN4 = L.markerClusterGroup({ maxClusterRadius: 50 });
+        // --- CLUSTERS MAKEN (6 BAKJES) ---
+        // Hout & Meubel
+        var cl_HM_N2 = L.markerClusterGroup({ maxClusterRadius: 40 });
+        var cl_HM_N3 = L.markerClusterGroup({ maxClusterRadius: 40 });
+        var cl_HM_N4 = L.markerClusterGroup({ maxClusterRadius: 40 });
+        
+        // Interieur & Advies
+        var cl_IA_N2 = L.markerClusterGroup({ maxClusterRadius: 40 });
+        var cl_IA_N3 = L.markerClusterGroup({ maxClusterRadius: 40 });
+        var cl_IA_N4 = L.markerClusterGroup({ maxClusterRadius: 40 });
 
-        map.addLayer(clusterN2);
-        map.addLayer(clusterN3);
-        map.addLayer(clusterN4);
+        // Standaard alles aanzetten
+        map.addLayer(cl_HM_N2); map.addLayer(cl_HM_N3); map.addLayer(cl_HM_N4);
+        map.addLayer(cl_IA_N2); map.addLayer(cl_IA_N3); map.addLayer(cl_IA_N4);
 
-        var baseMaps = { "Google Kaart": googleStreets, "Google Satelliet": googleSat, "OpenStreetMap": osmLayer };
+        // --- LAYER CONTROL (MENU) ---
+        var baseMaps = { "Kaart": googleStreets, "Satelliet": googleSat };
         var overlayMaps = { 
-            "<span style='color:#4caf50'>■</span> Niveau 2": clusterN2, 
-            "<span style='color:#ff9800'>■</span> Niveau 3": clusterN3, 
-            "<span style='color:#9c27b0'>■</span> Niveau 4": clusterN4 
+            "<b>HOUT & MEUBEL</b>": {
+                "<span style='color:#4caf50'>●</span> Niveau 2": cl_HM_N2, 
+                "<span style='color:#ff9800'>●</span> Niveau 3": cl_HM_N3, 
+                "<span style='color:#9c27b0'>●</span> Niveau 4": cl_HM_N4 
+            },
+            "<b>INTERIEUR & ADVIES</b>": {
+                "<span style='color:#00bcd4'>●</span> Niveau 2": cl_IA_N2, 
+                "<span style='color:#fdd835'>●</span> Niveau 3": cl_IA_N3, 
+                "<span style='color:#e91e63'>●</span> Niveau 4": cl_IA_N4 
+            }
         };
-        L.control.layers(baseMaps, overlayMaps).addTo(map);
+        
+        // Omdat Leaflet standaard geen headers snapt, voegen we ze plat toe maar met HTML trucjes
+        var flatOverlayMaps = {
+            "<b style='color:#333; text-decoration:underline'>HOUT & MEUBEL</b><br><span style='color:#4caf50'>●</span> Niveau 2": cl_HM_N2,
+            "<span style='color:#ff9800'>●</span> Niveau 3": cl_HM_N3,
+            "<span style='color:#9c27b0'>●</span> Niveau 4": cl_HM_N4,
+            "<br><b style='color:#333; text-decoration:underline'>INTERIEUR & ADVIES</b><br><span style='color:#00bcd4'>●</span> Niveau 2": cl_IA_N2,
+            "<span style='color:#fdd835'>●</span> Niveau 3": cl_IA_N3,
+            "<span style='color:#e91e63'>●</span> Niveau 4": cl_IA_N4
+        };
+
+        L.control.layers(baseMaps, flatOverlayMaps, {collapsed: true}).addTo(map);
 
         // --- LEGENDA ---
         var legend = L.control({position: 'bottomleft'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend');
-            div.innerHTML += "<strong>Opleidingsniveau</strong><br>";
+            div.innerHTML += "<h4>Hout & Meubel</h4>";
             div.innerHTML += '<i style="background: #9c27b0"></i> Niveau 4<br>';
             div.innerHTML += '<i style="background: #ff9800"></i> Niveau 3<br>';
             div.innerHTML += '<i style="background: #4caf50"></i> Niveau 2<br>';
-            div.innerHTML += '<i style="background: #f44336"></i> Al bezet / Vraag begeleider<br>';
+            
+            div.innerHTML += "<h4 style='margin-top:8px'>Interieur & Advies</h4>";
+            div.innerHTML += '<i style="background: #e91e63"></i> Niveau 4<br>';
+            div.innerHTML += '<i style="background: #fdd835"></i> Niveau 3<br>';
+            div.innerHTML += '<i style="background: #00bcd4"></i> Niveau 2<br>';
+            
+            div.innerHTML += "<h4 style='margin-top:8px; color:#f44336'>Status</h4>";
+            div.innerHTML += '<i style="background: #f44336"></i> VOL / Vraag docent<br>';
             return div;
         };
         legend.addTo(map);
 
-        // --- NIEUW: ROUTE FUNCTIE ---
-        // Deze functie wordt aangeroepen als je op de groene 'Go' knop drukt
-// --- NIEUW: ROUTE FUNCTIE (DEFAULT: OV) ---
+        // --- ROUTE FUNCTIE (OV DEFAULT) ---
         window.startRoute = function(lat, lng, inputId) {
             var inputVeld = document.getElementById(inputId);
             var vertrekPunt = inputVeld.value; 
-            
-            // De officiële Google Maps Directions URL
             var baseUrl = "https://www.google.com/maps/dir/?api=1";
             var destination = `&destination=${lat},${lng}`;
+            var mode = "&travelmode=transit"; // OV
             
-            // HIER ZETTEN WE HEM OP OV
-            // Opties: driving, walking, bicycling, transit
-            var mode = "&travelmode=transit"; 
-
-            var finalUrl = "";
-            
-            if (vertrekPunt && vertrekPunt.trim() !== "") {
-                // Met specifiek startpunt
-                var origin = `&origin=${encodeURIComponent(vertrekPunt)}`;
-                finalUrl = baseUrl + origin + destination + mode;
-            } else {
-                // Zonder startpunt (pakt automatisch GPS huidige locatie)
-                finalUrl = baseUrl + destination + mode;
-            }
+            var finalUrl = vertrekPunt && vertrekPunt.trim() !== "" 
+                ? `${baseUrl}&origin=${encodeURIComponent(vertrekPunt)}${destination}${mode}`
+                : `${baseUrl}${destination}${mode}`;
             
             window.open(finalUrl, '_blank');
         };
 
+        // --- DATA LADEN ---
         function laadPunten() {
             Papa.parse(googleSheetCSV, {
                 download: true,
@@ -137,7 +160,7 @@
                 skipEmptyLines: true,
                 complete: function(results) {
                     var data = results.data;
-                    console.log("Aantal regels:", data.length); 
+                    console.log("Rijen geladen:", data.length); 
 
                     data.forEach(function(rij) {
                         if(rij['LAT LONG'] && rij['LAT LONG'].includes(',')) {
@@ -145,35 +168,29 @@
                             var parts = rij['LAT LONG'].split(',');
                             var lat = parseFloat(parts[0]);
                             var lng = parseFloat(parts[1]);
-
-                            // We hebben een uniek ID nodig voor het invulveldje
-                            // Gebruik kolom 'Id' als die bestaat, anders een random getal
                             var uniekId = rij.Id ? rij.Id : Math.floor(Math.random() * 1000000);
 
                             if (!isNaN(lat) && !isNaN(lng)) {
 
+                                // DATA UITLEZEN
                                 var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
-                                
-                                var heeftN2 = rij['Niveau 2'] && rij['Niveau 2'].length > 0;
-                                var heeftN3 = rij['Niveau 3'] && rij['Niveau 3'].length > 0;
-                                var heeftN4 = rij['Niveau 4'] && rij['Niveau 4'].length > 0;
+                                var capaciteit = rij.Capaciteit ? rij.Capaciteit : '?';
 
+                                // Linkjes
                                 var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-                                var url = rij.Website;
-                                var websiteLink = '';
-                                if (url) {
-                                    url = url.trim();
-                                    if (url.length > 0 && !url.toLowerCase().startsWith('http')) url = 'http://' + url;
-                                    websiteLink = `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>`;
-                                }
+                                var url = rij.Website ? rij.Website.trim() : '';
+                                if (url.length > 0 && !url.toLowerCase().startsWith('http')) url = 'http://' + url;
+                                var websiteLink = url ? `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>` : '';
 
+                                // MARKER FABRIEK
                                 function maakMarker(kleur, niveauLabel, layerGroup) {
                                     var finalColor = kleur;
                                     var label = niveauLabel;
                                     
+                                    // Status check: Als V, dan rood
                                     if (status === 'v') {
                                         finalColor = '#f44336';
-                                        label = "Al bezet, vraag plaatsingsbegeleider";
+                                        label = "VOL / Vraag docent";
                                     }
 
                                     var marker = L.circleMarker([lat, lng], {
@@ -182,10 +199,10 @@
                                         color: "white", weight: 2, opacity: 1, fillOpacity: 0.9
                                     });
 
-                                    // HIER IS DE POPUP MET INVULVELD
                                     var popupHTML = `
                                         <div class="popup-content">
                                             <div class="popup-header">${rij.Naam}</div>
+                                            <span class="popup-cap">Capaciteit: ${capaciteit}</span>
                                             <span class="popup-level" style="background:${finalColor}">${label}</span>
                                             <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
                                             
@@ -193,20 +210,25 @@
                                             ${websiteLink}
 
                                             <div class="route-box">
-                                                <small>Plan route vanaf:</small><br>
-                                                <input type="text" id="route-${uniekId}-${label}" class="route-input" placeholder="Postcode of plaats...">
-                                                <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label}')" class="btn-go">Go 🚗</button>
+                                                <small>Plan OV-route vanaf:</small><br>
+                                                <input type="text" id="route-${uniekId}-${label.replace(/\s/g,'')}" class="route-input" placeholder="Postcode of station...">
+                                                <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label.replace(/\s/g,'')}')" class="btn-go">Go</button>
                                             </div>
                                         </div>
                                     `;
-                                    
                                     marker.bindPopup(popupHTML);
                                     layerGroup.addLayer(marker);
                                 }
 
-                                if (heeftN2) maakMarker('#4caf50', 'Niveau 2', clusterN2);
-                                if (heeftN3) maakMarker('#ff9800', 'Niveau 3', clusterN3);
-                                if (heeftN4) maakMarker('#9c27b0', 'Niveau 4', clusterN4);
+                                // CHECK & PLAATS MARKERS (HM)
+                                if (rij['HM_N2']) maakMarker('#4caf50', 'HM Niveau 2', cl_HM_N2); // Groen
+                                if (rij['HM_N3']) maakMarker('#ff9800', 'HM Niveau 3', cl_HM_N3); // Oranje
+                                if (rij['HM_N4']) maakMarker('#9c27b0', 'HM Niveau 4', cl_HM_N4); // Paars
+
+                                // CHECK & PLAATS MARKERS (IA)
+                                if (rij['IA_N2']) maakMarker('#00bcd4', 'IA Niveau 2', cl_IA_N2); // Turqoise
+                                if (rij['IA_N3']) maakMarker('#fdd835', 'IA Niveau 3', cl_IA_N3); // Geel
+                                if (rij['IA_N4']) maakMarker('#e91e63', 'IA Niveau 4', cl_IA_N4); // Roze
                             }
                         }
                     });
@@ -219,4 +241,3 @@
     </script>
 </body>
 </html>
-
