@@ -1,62 +1,172 @@
 <!DOCTYPE html>
 <html lang="nl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>BPV Kaart HMC</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
     <style>
-        body { padding: 0; margin: 0; font-family: sans-serif; }
-        html, body, #map { height: 100%; width: 100vw; }
-        
+        body {
+            padding: 0;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+            width: 100vw;
+        }
+
         /* Popup styling */
-        .popup-content { min-width: 230px; }
-        .popup-header { font-size: 15px; font-weight: bold; margin-bottom: 2px; color: #333; }
-        .popup-cap { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; display: block; }
-        .popup-level { display: inline-block; padding: 2px 6px; border-radius: 4px; color: white; font-size: 11px; margin-bottom: 8px; font-weight: bold; margin-right: 3px; text-shadow: 0px 0px 2px rgba(0,0,0,0.5); }
-        .popup-content p { margin: 0 0 10px 0; font-size: 13px; color: #666; line-height: 1.4; }
-        
+        .popup-content {
+            min-width: 230px;
+        }
+
+        .popup-header {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            color: #333;
+        }
+
+        .popup-cap {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .popup-level {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            margin-right: 3px;
+            text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-content p {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
         /* Knoppen styling */
         .btn-action {
-            display: inline-block; margin-top: 5px; margin-right: 5px; padding: 6px 10px;
-            background-color: #4285F4; color: white; text-decoration: none;
-            border-radius: 4px; font-size: 12px; font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+            margin-right: 5px;
+            padding: 6px 10px;
+            background-color: #4285F4;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
         }
-        .btn-streetview { background-color: #FFC107; color: #333; }
-        .website-link { display: block; margin-top: 10px; color: #0078A8; font-size: 12px; text-decoration: none; }
-        .website-link:hover { text-decoration: underline; }
+
+        .btn-streetview {
+            background-color: #FFC107;
+            color: #333;
+        }
+
+        .website-link {
+            display: block;
+            margin-top: 10px;
+            color: #0078A8;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .website-link:hover {
+            text-decoration: underline;
+        }
 
         /* Route input styling */
-        .route-box { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; background: #f9f9f9; padding: 8px; border-radius: 4px; }
-        .route-input { 
-            width: 120px; padding: 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;
+        .route-box {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 4px;
         }
+
+        .route-input {
+            width: 120px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
         .btn-go {
-            background-color: #4caf50; color: white; border: none; padding: 5px 10px;
-            border-radius: 3px; cursor: pointer; font-weight: bold; font-size: 12px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
         }
 
         /* Legenda */
         .legend {
-            background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            font-size: 11px; line-height: 16px; color: #555;
-            max-height: 300px; overflow-y: auto;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            font-size: 11px;
+            line-height: 16px;
+            color: #555;
+            max-height: 300px;
+            overflow-y: auto;
         }
-        .legend h4 { margin: 0 0 5px 0; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
-        .legend i { width: 10px; height: 10px; float: left; margin-right: 8px; opacity: 0.8; border-radius: 50%; margin-top: 3px; }
-        .legend-section { margin-bottom: 8px; }
+
+        .legend h4 {
+            margin: 0 0 5px 0;
+            font-size: 12px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 3px;
+        }
+
+        .legend i {
+            width: 10px;
+            height: 10px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.8;
+            border-radius: 50%;
+            margin-top: 3px;
+        }
+
+        .legend-section {
+            margin-bottom: 8px;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
@@ -66,21 +176,32 @@
 
         // --- KAART SETUP ---
         var osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' });
-        var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
-        var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
+        var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] });
+        var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] });
 
         var map = L.map('map', {
             center: [52.1326, 5.2913],
             zoom: 8,
-            layers: [googleStreets] 
+            layers: [googleStreets]
         });
+
+        // INJECTED COORDINATES FROM APPS SCRIPT
+        var serverLat = <?= (typeof startLat !== 'undefined' && startLat) ? startLat : 'null' ?>;
+        var serverLng = <?= (typeof startLng !== 'undefined' && startLng) ? startLng : 'null' ?>;
+
+        if (serverLat && serverLng) {
+            map.setView([serverLat, serverLng], 15);
+            // Optional: Add a temporary marker to highlight the location?
+            // L.marker([serverLat, serverLng]).addTo(map).bindPopup("Geselecteerde student").openPopup();
+        }
+
 
         // --- CLUSTERS MAKEN (6 BAKJES) ---
         // Hout & Meubel
         var cl_HM_N2 = L.markerClusterGroup({ maxClusterRadius: 40 });
         var cl_HM_N3 = L.markerClusterGroup({ maxClusterRadius: 40 });
         var cl_HM_N4 = L.markerClusterGroup({ maxClusterRadius: 40 });
-        
+
         // Interieur & Advies
         var cl_IA_N2 = L.markerClusterGroup({ maxClusterRadius: 40 });
         var cl_IA_N3 = L.markerClusterGroup({ maxClusterRadius: 40 });
@@ -92,19 +213,19 @@
 
         // --- LAYER CONTROL (MENU) ---
         var baseMaps = { "Kaart": googleStreets, "Satelliet": googleSat };
-        var overlayMaps = { 
+        var overlayMaps = {
             "<b>HOUT & MEUBEL</b>": {
-                "<span style='color:#4caf50'>●</span> Niveau 2": cl_HM_N2, 
-                "<span style='color:#ff9800'>●</span> Niveau 3": cl_HM_N3, 
-                "<span style='color:#9c27b0'>●</span> Niveau 4": cl_HM_N4 
+                "<span style='color:#4caf50'>●</span> Niveau 2": cl_HM_N2,
+                "<span style='color:#ff9800'>●</span> Niveau 3": cl_HM_N3,
+                "<span style='color:#9c27b0'>●</span> Niveau 4": cl_HM_N4
             },
             "<b>INTERIEUR & ADVIES</b>": {
-                "<span style='color:#00bcd4'>●</span> Niveau 2": cl_IA_N2, 
-                "<span style='color:#fdd835'>●</span> Niveau 3": cl_IA_N3, 
-                "<span style='color:#e91e63'>●</span> Niveau 4": cl_IA_N4 
+                "<span style='color:#00bcd4'>●</span> Niveau 2": cl_IA_N2,
+                "<span style='color:#fdd835'>●</span> Niveau 3": cl_IA_N3,
+                "<span style='color:#e91e63'>●</span> Niveau 4": cl_IA_N4
             }
         };
-        
+
         // Omdat Leaflet standaard geen headers snapt, voegen we ze plat toe maar met HTML trucjes
         var flatOverlayMaps = {
             "<b style='color:#333; text-decoration:underline'>MEUBEL</b><br><span style='color:#4caf50'>●</span> Niveau 2": cl_HM_N2,
@@ -115,22 +236,22 @@
             "<span style='color:#e91e63'>●</span> Niveau 4": cl_IA_N4
         };
 
-        L.control.layers(baseMaps, flatOverlayMaps, {collapsed: true}).addTo(map);
+        L.control.layers(baseMaps, flatOverlayMaps, { collapsed: true }).addTo(map);
 
         // --- LEGENDA ---
-        var legend = L.control({position: 'bottomleft'});
+        var legend = L.control({ position: 'bottomleft' });
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend');
             div.innerHTML += "<h4>Hout & Meubel</h4>";
             div.innerHTML += '<i style="background: #9c27b0"></i> Niveau 4<br>';
             div.innerHTML += '<i style="background: #ff9800"></i> Niveau 3<br>';
             div.innerHTML += '<i style="background: #4caf50"></i> Niveau 2<br>';
-            
+
             div.innerHTML += "<h4 style='margin-top:8px'>Interieur & Advies</h4>";
             div.innerHTML += '<i style="background: #e91e63"></i> Niveau 4<br>';
             div.innerHTML += '<i style="background: #fdd835"></i> Niveau 3<br>';
             div.innerHTML += '<i style="background: #00bcd4"></i> Niveau 2<br>';
-            
+
             div.innerHTML += "<h4 style='margin-top:8px; color:#f44336'>Status</h4>";
             div.innerHTML += '<i style="background: #f44336"></i> VOL / Vraag docent<br>';
             return div;
@@ -138,17 +259,17 @@
         legend.addTo(map);
 
         // --- ROUTE FUNCTIE (OV DEFAULT) ---
-        window.startRoute = function(lat, lng, inputId) {
+        window.startRoute = function (lat, lng, inputId) {
             var inputVeld = document.getElementById(inputId);
-            var vertrekPunt = inputVeld.value; 
+            var vertrekPunt = inputVeld.value;
             var baseUrl = "https://www.google.com/maps/dir/?api=1";
             var destination = `&destination=${lat},${lng}`;
             var mode = "&travelmode=transit"; // OV
-            
-            var finalUrl = vertrekPunt && vertrekPunt.trim() !== "" 
+
+            var finalUrl = vertrekPunt && vertrekPunt.trim() !== ""
                 ? `${baseUrl}&origin=${encodeURIComponent(vertrekPunt)}${destination}${mode}`
                 : `${baseUrl}${destination}${mode}`;
-            
+
             window.open(finalUrl, '_blank');
         };
 
@@ -158,13 +279,13 @@
                 download: true,
                 header: true,
                 skipEmptyLines: true,
-                complete: function(results) {
+                complete: function (results) {
                     var data = results.data;
-                    console.log("Rijen geladen:", data.length); 
+                    console.log("Rijen geladen:", data.length);
 
-                    data.forEach(function(rij) {
-                        if(rij['LAT LONG'] && rij['LAT LONG'].includes(',')) {
-                            
+                    data.forEach(function (rij) {
+                        if (rij['LAT LONG'] && rij['LAT LONG'].includes(',')) {
+
                             var parts = rij['LAT LONG'].split(',');
                             var lat = parseFloat(parts[0]);
                             var lng = parseFloat(parts[1]);
@@ -186,7 +307,7 @@
                                 function maakMarker(kleur, niveauLabel, layerGroup) {
                                     var finalColor = kleur;
                                     var label = niveauLabel;
-                                    
+
                                     // Status check: Als V, dan rood
                                     if (status === 'v') {
                                         finalColor = '#f44336';
@@ -211,8 +332,8 @@
 
                                             <div class="route-box">
                                                 <small>Plan OV-route vanaf:</small><br>
-                                                <input type="text" id="route-${uniekId}-${label.replace(/\s/g,'')}" class="route-input" placeholder="Postcode of station...">
-                                                <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label.replace(/\s/g,'')}')" class="btn-go">Go</button>
+                                                <input type="text" id="route-${uniekId}-${label.replace(/\s/g, '')}" class="route-input" placeholder="Postcode of station...">
+                                                <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label.replace(/\s/g, '')}')" class="btn-go">Go</button>
                                             </div>
                                         </div>
                                     `;
@@ -240,5 +361,5 @@
 
     </script>
 </body>
-</html>
 
+</html>
