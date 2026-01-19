@@ -7,6 +7,8 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 
@@ -59,7 +61,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
         // --- DATA LINK (GID 1928204680) ---
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqbtXG3aiyEMFV--hYMBFojn3Qx2h5fP-aY3cjlMANjGTo1PVhnzR_e_1WTz7Saj2JJFxrtu2hvRx_/pub?gid=1928204680&single=true&output=csv";
@@ -70,6 +72,21 @@
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
 
         var map = L.map('map', {
+            // VOEG ZOEKBALK TOE
+            L.Control.geocoder({
+                defaultMarkGeocode: false // Zet op 'true' als je ook een marker wilt plaatsen op de zoeklocatie
+            })
+            .on('markgeocode', function(e) {
+                var bbox = e.geocode.bbox;
+                var poly = L.polygon([
+                    bbox.getSouthEast(),
+                    bbox.getNorthEast(),
+                    bbox.getNorthWest(),
+                    bbox.getSouthWest()
+                ]);
+                map.fitBounds(poly.getBounds());
+            })
+            .addTo(map);
             center: [52.1326, 5.2913],
             zoom: 8,
             layers: [googleStreets] 
@@ -241,3 +258,4 @@
     </script>
 </body>
 </html>
+
