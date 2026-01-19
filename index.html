@@ -129,8 +129,8 @@
         var cl_IA_N4 = L.markerClusterGroup({ maxClusterRadius: 40 });
 
         // Standaard alles aanzetten
-        map.addLayer(cl_HM_N2); map.addLayer(cl_HM_N3); map.addLayer(cl_HM_N4);
-        map.addLayer(cl_IA_N2); map.addLayer(cl_IA_N3); map.addLayer(cl_IA_N4);
+        map.addLayer(cl_HM_N2); //map.addLayer(cl_HM_N3); map.addLayer(cl_HM_N4);
+        //map.addLayer(cl_IA_N2); map.addLayer(cl_IA_N3); map.addLayer(cl_IA_N4);
 
         // --- LAYER CONTROL (MENU) ---
         var baseMaps = { "Kaart": googleStreets, "Satelliet": googleSat };
@@ -277,13 +277,13 @@
                 if (tekst.includes('HM Niveau 2')) {
                     var header = document.createElement('div');
                     header.className = 'menu-header';
-                    header.innerHTML = '📂 Hout & Meubel';
+                    header.innerHTML = 'O Hout & Meubel';
                     span.parentElement.parentElement.insertBefore(header, span.parentElement);
                 }
                 if (tekst.includes('IA Niveau 2')) {
                     var header = document.createElement('div');
                     header.className = 'menu-header';
-                    header.innerHTML = '📂 Interieur & Advies';
+                    header.innerHTML = 'O Interieur & Advies';
                     span.parentElement.parentElement.insertBefore(header, span.parentElement);
                 }
             });
@@ -292,3 +292,4 @@
     </script>
 </body>
 </html>
+
