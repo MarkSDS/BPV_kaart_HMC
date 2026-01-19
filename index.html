@@ -43,35 +43,39 @@
             border-radius: 3px; cursor: pointer; font-weight: bold; font-size: 12px;
         }
 
-        /* Legenda */
+        /* Legenda Linksonder */
         .legend {
             background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
             font-size: 11px; line-height: 16px; color: #555;
             max-height: 300px; overflow-y: auto;
         }
-        /* --- NIEUW: STYLING VOOR HET MENU RECHTSBOVEN --- */
+        .legend h4 { margin: 0 0 5px 0; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+        .legend i { width: 10px; height: 10px; float: left; margin-right: 8px; opacity: 0.8; border-radius: 50%; margin-top: 3px; }
+
+        /* --- MENU STYLING (Rechtsboven) --- */
         .leaflet-control-layers-expanded {
-            min-width: 220px !important; /* Maak het menu breder */
-            padding: 12px !important;    /* Meer ruimte aan de randen */
-            line-height: 2.2 !important; /* Meer ruimte tussen de regels */
-            box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; /* Mooiere schaduw */
+            min-width: 200px !important;
+            padding: 10px !important;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important;
         }
         
-        /* De "Kopjes" styling binnen het menu */
+        /* De tussenkopjes in het menu */
         .menu-header {
-            display: block;
-            margin-top: 10px;
-            margin-bottom: 5px;
+            margin-top: 12px;
+            margin-bottom: 4px;
             font-weight: bold;
             color: #333;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #eee; /* Licht grijs lijntje eronder */
             font-size: 11px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 2px;
         }
-        .legend h4 { margin: 0 0 5px 0; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
-        .legend i { width: 10px; height: 10px; float: left; margin-right: 8px; opacity: 0.8; border-radius: 50%; margin-top: 3px; }
-        .legend-section { margin-bottom: 8px; }
+        
+        /* Eerste kopje heeft geen witruimte boven nodig */
+        .menu-header:first-of-type { margin-top: 0; }
+        
+        /* Ruimte tussen de checkboxes */
+        .leaflet-control-layers label { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -92,24 +96,22 @@
         var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] });
 
-        // HIER GING HET MIS: De map moet eerst 'schoon' worden aangemaakt
+        // Kaart aanmaken
         var map = L.map('map', {
             center: [52.1326, 5.2913],
             zoom: 8,
             layers: [googleStreets] 
         });
 
-        // EN HIER VOEGEN WE DE ZOEKBALK PAS TOE (NA DE AANMAAK)
+        // Zoekbalk toevoegen
         L.Control.geocoder({
             defaultMarkGeocode: false 
         })
         .on('markgeocode', function(e) {
             var bbox = e.geocode.bbox;
             var poly = L.polygon([
-                bbox.getSouthEast(),
-                bbox.getNorthEast(),
-                bbox.getNorthWest(),
-                bbox.getSouthWest()
+                bbox.getSouthEast(), bbox.getNorthEast(),
+                bbox.getNorthWest(), bbox.getSouthWest()
             ]);
             map.fitBounds(poly.getBounds());
         })
@@ -133,22 +135,20 @@
         // --- LAYER CONTROL (MENU) ---
         var baseMaps = { "Kaart": googleStreets, "Satelliet": googleSat };
         
-// AANGEPASTE VERSIE: Met mooiere tussenkopjes
+        // We gebruiken hier simpele namen. Het scriptje onderaan voegt de headers toe.
         var flatOverlayMaps = {
-            // HOUT & MEUBEL (De header zit in de eerste regel verwerkt)
-            "<div class='menu-header'>📂 Hout & Meubel</div><span style='color:#4caf50'>●</span> Niveau 2": cl_HM_N2,
-            "<span style='color:#ff9800'>●</span> Niveau 3": cl_HM_N3,
-            "<span style='color:#9c27b0'>●</span> Niveau 4": cl_HM_N4,
+            "<span style='color:#4caf50'>●</span> HM Niveau 2": cl_HM_N2,
+            "<span style='color:#ff9800'>●</span> HM Niveau 3": cl_HM_N3,
+            "<span style='color:#9c27b0'>●</span> HM Niveau 4": cl_HM_N4,
             
-            // INTERIEUR & ADVIES
-            "<div class='menu-header'>📂 Interieur & Advies</div><span style='color:#00bcd4'>●</span> Niveau 2": cl_IA_N2,
-            "<span style='color:#fdd835'>●</span> Niveau 3": cl_IA_N3,
-            "<span style='color:#e91e63'>●</span> Niveau 4": cl_IA_N4
+            "<span style='color:#00bcd4'>●</span> IA Niveau 2": cl_IA_N2,
+            "<span style='color:#fdd835'>●</span> IA Niveau 3": cl_IA_N3,
+            "<span style='color:#e91e63'>●</span> IA Niveau 4": cl_IA_N4
         };
 
         L.control.layers(baseMaps, flatOverlayMaps, {collapsed: true}).addTo(map);
 
-        // --- LEGENDA ---
+        // --- LEGENDA (Linksonder) ---
         var legend = L.control({position: 'bottomleft'});
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'legend');
@@ -252,14 +252,14 @@
                                 }
 
                                 // CHECK & PLAATS MARKERS (HM)
-                                if (rij['HM_N2']) maakMarker('#4caf50', 'HM Niveau 2', cl_HM_N2); // Groen
-                                if (rij['HM_N3']) maakMarker('#ff9800', 'HM Niveau 3', cl_HM_N3); // Oranje
-                                if (rij['HM_N4']) maakMarker('#9c27b0', 'HM Niveau 4', cl_HM_N4); // Paars
+                                if (rij['HM_N2']) maakMarker('#4caf50', 'HM Niveau 2', cl_HM_N2); 
+                                if (rij['HM_N3']) maakMarker('#ff9800', 'HM Niveau 3', cl_HM_N3); 
+                                if (rij['HM_N4']) maakMarker('#9c27b0', 'HM Niveau 4', cl_HM_N4); 
 
                                 // CHECK & PLAATS MARKERS (IA)
-                                if (rij['IA_N2']) maakMarker('#00bcd4', 'IA Niveau 2', cl_IA_N2); // Turqoise
-                                if (rij['IA_N3']) maakMarker('#fdd835', 'IA Niveau 3', cl_IA_N3); // Geel
-                                if (rij['IA_N4']) maakMarker('#e91e63', 'IA Niveau 4', cl_IA_N4); // Roze
+                                if (rij['IA_N2']) maakMarker('#00bcd4', 'IA Niveau 2', cl_IA_N2); 
+                                if (rij['IA_N3']) maakMarker('#fdd835', 'IA Niveau 3', cl_IA_N3); 
+                                if (rij['IA_N4']) maakMarker('#e91e63', 'IA Niveau 4', cl_IA_N4); 
                             }
                         }
                     });
@@ -269,7 +269,26 @@
 
         laadPunten();
 
+        // --- MENU OPMAAK FIX (Headers toevoegen zonder checkboxes) ---
+        setTimeout(function() {
+            var labels = document.querySelectorAll('.leaflet-control-layers-overlays label span');
+            labels.forEach(function(span) {
+                var tekst = span.innerHTML;
+                if (tekst.includes('HM Niveau 2')) {
+                    var header = document.createElement('div');
+                    header.className = 'menu-header';
+                    header.innerHTML = '📂 Hout & Meubel';
+                    span.parentElement.parentElement.insertBefore(header, span.parentElement);
+                }
+                if (tekst.includes('IA Niveau 2')) {
+                    var header = document.createElement('div');
+                    header.className = 'menu-header';
+                    header.innerHTML = '📂 Interieur & Advies';
+                    span.parentElement.parentElement.insertBefore(header, span.parentElement);
+                }
+            });
+        }, 100);
+
     </script>
 </body>
 </html>
-
