@@ -269,22 +269,38 @@
 
         laadPunten();
 
-        // --- MENU OPMAAK FIX (Headers toevoegen zonder checkboxes) ---
+// --- MENU OPMAAK FIX (Veilige Versie) ---
+        // Voegt headers toe, maar checkt eerst of ze er niet al staan.
         setTimeout(function() {
             var labels = document.querySelectorAll('.leaflet-control-layers-overlays label span');
+            
             labels.forEach(function(span) {
                 var tekst = span.innerHTML;
+                var labelRij = span.parentElement; // Het <label> element
+                
+                // VEILIGHEIDSCHECK: Hebben we hier al een kopje gezet?
+                if (labelRij.classList.contains('header-placed')) return;
+
+                // Zoek Hout & Meubel
                 if (tekst.includes('HM Niveau 2')) {
                     var header = document.createElement('div');
                     header.className = 'menu-header';
-                    header.innerHTML = 'O Hout & Meubel';
-                    span.parentElement.parentElement.insertBefore(header, span.parentElement);
+                    header.innerHTML = '📂 Hout & Meubel';
+                    
+                    // Plaats header en zet de stempel
+                    labelRij.parentElement.insertBefore(header, labelRij);
+                    labelRij.classList.add('header-placed'); 
                 }
+                
+                // Zoek Interieur & Advies
                 if (tekst.includes('IA Niveau 2')) {
                     var header = document.createElement('div');
                     header.className = 'menu-header';
-                    header.innerHTML = 'O Interieur & Advies';
-                    span.parentElement.parentElement.insertBefore(header, span.parentElement);
+                    header.innerHTML = '📂 Interieur & Advies';
+                    
+                    // Plaats header en zet de stempel
+                    labelRij.parentElement.insertBefore(header, labelRij);
+                    labelRij.classList.add('header-placed');
                 }
             });
         }, 100);
@@ -292,4 +308,5 @@
     </script>
 </body>
 </html>
+
 
