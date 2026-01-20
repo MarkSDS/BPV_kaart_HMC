@@ -269,44 +269,46 @@
 
         laadPunten();
 
-// --- MENU OPMAAK FIX (Veilige Versie) ---
-        // Voegt headers toe, maar checkt eerst of ze er niet al staan.
+// --- MENU OPMAAK FIX (De "Buurman-Check") ---
         setTimeout(function() {
-            var labels = document.querySelectorAll('.leaflet-control-layers-overlays label span');
+            // We selecteren direct de <label> elementen (de regels in het menu)
+            var labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
             
-            labels.forEach(function(span) {
+            labels.forEach(function(label) {
+                // Pak de tekst in het label
+                var span = label.querySelector('span'); 
+                if (!span) return; // Veiligheidscheck
                 var tekst = span.innerHTML;
-                var labelRij = span.parentElement; // Het <label> element
                 
-                // VEILIGHEIDSCHECK: Hebben we hier al een kopje gezet?
-                if (labelRij.classList.contains('header-placed')) return;
+                // DE BUURMAN CHECK: Kijk naar het element direct hierboven
+                var buurman = label.previousElementSibling;
+                
+                // Als de buurman bestaat én het is al onze header... STOP DAN!
+                if (buurman && buurman.classList.contains('menu-header')) {
+                    return; 
+                }
 
-                // Zoek Hout & Meubel
+                // 1. Zoek Hout & Meubel
                 if (tekst.includes('HM Niveau 2')) {
                     var header = document.createElement('div');
                     header.className = 'menu-header';
                     header.innerHTML = '📂 Hout & Meubel';
-                    
-                    // Plaats header en zet de stempel
-                    labelRij.parentElement.insertBefore(header, labelRij);
-                    labelRij.classList.add('header-placed'); 
+                    label.parentElement.insertBefore(header, label);
                 }
                 
-                // Zoek Interieur & Advies
+                // 2. Zoek Interieur & Advies
                 if (tekst.includes('IA Niveau 2')) {
                     var header = document.createElement('div');
                     header.className = 'menu-header';
                     header.innerHTML = '📂 Interieur & Advies';
-                    
-                    // Plaats header en zet de stempel
-                    labelRij.parentElement.insertBefore(header, labelRij);
-                    labelRij.classList.add('header-placed');
+                    label.parentElement.insertBefore(header, label);
                 }
             });
-        }, 100);
+        }, 500); // Wacht een halve seconde (veiliger)
 
     </script>
 </body>
 </html>
+
 
 
