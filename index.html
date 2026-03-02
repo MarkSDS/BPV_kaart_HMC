@@ -141,9 +141,9 @@
             "<span style='color:#ff9800'>●</span> HM Niveau 3": cl_HM_N3,
             "<span style='color:#9c27b0'>●</span> HM Niveau 4": cl_HM_N4,
             
-            "<span style='color:#00bcd4'>●</span> IA Niveau 2": cl_IA_N2,
-            "<span style='color:#fdd835'>●</span> IA Niveau 3": cl_IA_N3,
-            "<span style='color:#e91e63'>●</span> IA Niveau 4": cl_IA_N4
+            "<span style='color:#4caf50'>●</span> IA Niveau 2": cl_IA_N2,
+            "<span style='color:#ff9800'>●</span> IA Niveau 3": cl_IA_N3,
+            "<span style='color:#9c27b0'>●</span> IA Niveau 4": cl_IA_N4
         };
 
         L.control.layers(baseMaps, flatOverlayMaps, {collapsed: true}).addTo(map);
@@ -159,8 +159,8 @@
             
             div.innerHTML += "<h4 style='margin-top:8px'>Interieur & Advies</h4>";
             div.innerHTML += '<i style="background: #e91e63"></i> Niveau 4<br>';
-            div.innerHTML += '<i style="background: #fdd835"></i> Niveau 3<br>';
-            div.innerHTML += '<i style="background: #00bcd4"></i> Niveau 2<br>';
+            div.innerHTML += '<i style="background: #ff9800"></i> Niveau 3<br>';
+            div.innerHTML += '<i style="background: #4caf50"></i> Niveau 2<br>';
             
             div.innerHTML += "<h4 style='margin-top:8px; color:#f44336'>Status</h4>";
             div.innerHTML += '<i style="background: #f44336"></i> VOL / Vraag docent<br>';
@@ -257,9 +257,9 @@
                                 if (rij['HM_N4']) maakMarker('#9c27b0', 'HM Niveau 4', cl_HM_N4); 
 
                                 // CHECK & PLAATS MARKERS (IA)
-                                if (rij['IA_N2']) maakMarker('#00bcd4', 'IA Niveau 2', cl_IA_N2); 
-                                if (rij['IA_N3']) maakMarker('#fdd835', 'IA Niveau 3', cl_IA_N3); 
-                                if (rij['IA_N4']) maakMarker('#e91e63', 'IA Niveau 4', cl_IA_N4); 
+                                if (rij['IA_N2']) maakMarker('#4caf50', 'IA Niveau 2', cl_IA_N2); 
+                                if (rij['IA_N3']) maakMarker('#ff9800', 'IA Niveau 3', cl_IA_N3); 
+                                if (rij['IA_N4']) maakMarker('#9c27b0', 'IA Niveau 4', cl_IA_N4); 
                             }
                         }
                     });
@@ -309,6 +309,7 @@
     </script>
 </body>
 </html>
+
 
 
 
