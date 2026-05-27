@@ -193,63 +193,69 @@
                     var data = results.data;
                     console.log("Rijen geladen:", data.length); 
 
-                    data.forEach(function(rij) {
-                        if(rij['LAT LONG'] && rij['LAT LONG'].includes(',')) {
+                data.forEach(function(rij) {
+                    if(rij['LAT LONG'] && rij['LAT LONG'].includes(',')) {
+                        
+                        var parts = rij['LAT LONG'].split(',');
+                        var lat = parseFloat(parts[0]);
+                        var lng = parseFloat(parts[1]);
+                        var uniekId = rij.Id ? rij.Id : Math.floor(Math.random() * 1000000);
+                
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                
+                            // DATA UITLEZEN
+                            var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
+                            var capaciteit = rij.Capaciteit ? rij.Capaciteit : '?';
+                
+                            // Linkjes
+                            var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
                             
-                            var parts = rij['LAT LONG'].split(',');
-                            var lat = parseFloat(parts[0]);
-                            var lng = parseFloat(parts[1]);
-                            var uniekId = rij.Id ? rij.Id : Math.floor(Math.random() * 1000000);
-
-                            if (!isNaN(lat) && !isNaN(lng)) {
-
-                                // DATA UITLEZEN
-                                var status = rij.STATUS ? rij.STATUS.toLowerCase().trim() : '';
-                                var capaciteit = rij.Capaciteit ? rij.Capaciteit : '?';
-
-                                // Linkjes
-                                var streetViewLink = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-                                var url = rij.Website ? rij.Website.trim() : '';
-                                if (url.length > 0 && !url.toLowerCase().startsWith('http')) url = 'http://' + url;
-                                var websiteLink = url ? `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>` : '';
-
-                                // MARKER FABRIEK
-                                function maakMarker(kleur, niveauLabel, layerGroup) {
-                                    var finalColor = kleur;
-                                    var label = niveauLabel;
-                                    
-                                    // Status check: Als V, dan rood
-                                    if (status === 'v') {
-                                        finalColor = '#f44336';
-                                        label = "VOL / Vraag docent";
-                                    }
-
-                                    var marker = L.circleMarker([lat, lng], {
-                                        radius: 8,
-                                        fillColor: finalColor,
-                                        color: "white", weight: 2, opacity: 1, fillOpacity: 0.9
-                                    });
-
-                                    var popupHTML = `
-                                        <div class="popup-content">
-                                            <div class="popup-header">${rij.Naam}</div>
-                                            <span class="popup-cap">Capaciteit: ${capaciteit}</span>
-                                            <span class="popup-level" style="background:${finalColor}">${label}</span>
-                                            <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
-                                            
-                                            <a href="${streetViewLink}" target="_blank" class="btn-action btn-streetview">👀 Streetview</a>
-                                            ${websiteLink}
-
-                                            <div class="route-box">
-                                                <small>Plan OV-route vanaf:</small><br>
-                                                <input type="text" id="route-${uniekId}-${label.replace(/\s/g,'')}" class="route-input" placeholder="Postcode of station...">
-                                                <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label.replace(/\s/g,'')}')" class="btn-go">Go</button>
-                                            </div>
-                                        </div>
-                                    `;
-                                    marker.bindPopup(popupHTML);
-                                    layerGroup.addLayer(marker);
+                            // Website link
+                            var url = rij.Website ? rij.Website.trim() : '';
+                            if (url.length > 0 && !url.toLowerCase().startsWith('http')) url = 'http://' + url;
+                            var websiteLink = url ? `<a href="${url}" target="_blank" class="website-link">🌐 Website bezoeken</a>` : '';
+                
+                            // NIEUW: B3 pagina link uitlezen en valideren
+                            var b3Url = rij['B3 pagina'] ? rij['B3 pagina'].trim() : '';
+                            if (b3Url.length > 0 && !b3Url.toLowerCase().startsWith('http')) b3Url = 'http://' + b3Url;
+                            var b3Link = b3Url ? `<a href="${b3Url}" target="_blank" class="btn-action btn-b3">📄 B3 Pagina</a>` : '';
+                
+                            // MARKER FABRIEK
+                            function maakMarker(kleur, niveauLabel, layerGroup) {
+                                var finalColor = kleur;
+                                var label = niveauLabel;
+                                
+                                // Status check: Als V, dan rood
+                                if (status === 'v') {
+                                    finalColor = '#f44336';
+                                    label = "VOL / Vraag docent";
                                 }
+                
+                                var marker = L.circleMarker([lat, lng], {
+                                    radius: 8,
+                                    fillColor: finalColor,
+                                    color: "white", weight: 2, opacity: 1, fillOpacity: 0.9
+                                });
+
+                var popupHTML = `
+                    <div class="popup-content">
+                        <div class="popup-header">${rij.Naam}</div>
+                        <span class="popup-cap">Capaciteit: ${capaciteit}</span>
+                        <span class="popup-level" style="background:${finalColor}">${label}</span>
+                        <p>${rij.Adres}<br>${rij.Postcode} ${rij.Plaatsnaam}</p>
+                        
+                        <a href="${streetViewLink}" target="_blank" class="btn-action btn-streetview">👀 Streetview</a>
+                        ${websiteLink}
+                        ${b3Link} <div class="route-box">
+                            <small>Plan OV-route vanaf:</small><br>
+                            <input type="text" id="route-${uniekId}-${label.replace(/\s/g,'')}" class="route-input" placeholder="Postcode of station...">
+                            <button onclick="startRoute('${lat}', '${lng}', 'route-${uniekId}-${label.replace(/\s/g,'')}')" class="btn-go">Go</button>
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupHTML);
+                layerGroup.addLayer(marker);
+            }
 
                                 // CHECK & PLAATS MARKERS (HM)
                                 if (rij['HM_N2']) maakMarker('#4caf50', 'HM Niveau 2', cl_HM_N2); 
